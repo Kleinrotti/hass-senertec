@@ -2,6 +2,7 @@
   "domain": "senertec_hassio",
   "name": "Senertec Energy Systems",
   "version": "0.1.2",
+  "issue_tracker": "https://github.com/Kleinrotti/hass-senertec/issues",
   "config_flow": true,
   "documentation": "https://github.com/Kleinrotti/hass-senertec",
   "requirements": [
