@@ -1,0 +1,6 @@
+{
+    "name": "Senertec Energy System",
+    "domains": ["sensor"],
+    "render_readme": true,
+    "homeassistant": "2021.11.0"
+  }

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "description": "Please enter your credentials.",
+                "data": {
+                    "password": "Password",
+                    "email": "E-Mail"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval" : "Interval to poll data (minutes)",
+                    "sensor_lang" : "Default language for sensor names"
+                },
+                "title": "Options"
+            }
+        }
+    }
+}

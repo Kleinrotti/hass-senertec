@@ -1,0 +1,15 @@
+{
+  "domain": "senertec_hassio",
+  "name": "Senertec Energy Systems",
+  "version": "0.1.2",
+  "config_flow": true,
+  "documentation": "https://github.com/Kleinrotti/hass-senertec",
+  "requirements": [
+    "py-senertec==0.2.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@Kleinrotti"
+  ],
+  "iot_class": "cloud_polling"
+}
