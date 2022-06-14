@@ -3,19 +3,19 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
-Custom component to support Senertec heating systems.
+Custom component to support Senertec energy systems.
 
 ## Table of Contents
 
-- [About](#about)
-- [Installation](#installation)
-  - [Installation through HACS](#installation-through-hacs)
-  - [Manual installation](#manual-installation)
-- [Configuration](#configuration)
-  - [Home Assistant](#home-assistant)
-- [Supported devices](#supported-devices)
-- [Development](#development)
-  - [Debugging](#debugging)
+  - [About](#about)
+  - [Installation](#installation)
+    - [Installation through HACS](#installation-through-hacs)
+    - [Manual installation](#manual-installation)
+  - [Configuration](#configuration)
+    - [Home Assistant](#home-assistant)
+  - [Supported devices](#supported-devices)
+  - [Development](#development)
+    - [Debugging](#debugging)
 
 ## About
 
@@ -23,7 +23,7 @@ With this integration you can integrate the sensors of your senertec heating sys
 
 ## Installation
 
-Requires Home Assistant 2021.7.0 or newer.
+Requires Home Assistant 2021.11.0 or newer.
 You need an account for Senertec Dachsconnect Gen2.
 
 ### Installation through HACS
