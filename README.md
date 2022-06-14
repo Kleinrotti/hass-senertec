@@ -38,7 +38,8 @@ Install the new integration through *Configuration -> Integrations* in HA (see b
 
 ### Manual installation
 
-Copy the sub-path `/hass-senertec/custom_components/senertec_hassio` of this repo into the path `/config/custom_components/senertec_hassio` of your HA installation.
+Copy the sub-path `/hass-senertec/custom_components/senertec` of this repo into the path
+`/config/custom_components/senertec` of your HA installation.
 
 Alternatively use the following commands within an SSH shell into your HA system.
 Do NOT try to execute these commands directly your PC on a mounted HA file system. The resulting symlink would be broken for the HA file system.
@@ -52,7 +53,7 @@ git clone https://github.com/Kleinrotti/hass-senertec.git
 mkdir custom_components
 
 cd custom_components
-ln -s ../hass-senertec/custom_components/senertec_hassio
+ln -s ../hass-senertec/custom_components/senertec
 ```
 
 ## Configuration
@@ -88,7 +89,7 @@ file. Example:
 logger:
   default: info
   logs:
-    custom_components.senertec_hassio: debug
+    custom_components.senertec: debug
 
     py-senertec: debug
     websocket: debug
