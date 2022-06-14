@@ -27,7 +27,8 @@ async def async_setup_entry(
                     SenertecErrorSensor(coordinator, item) for item in lists
                 )
             else:
-                async_add_entities(SenertecSensor(coordinator, item) for item in lists)
+                async_add_entities(SenertecSensor(coordinator, item)
+                                   for item in lists)
     else:
         _LOGGER.warning("No sensor data found.")
 
@@ -60,7 +61,8 @@ class SenertecSensor(CoordinatorEntity, SensorEntity):
                 None,
             )
             if temp == None:
-                _LOGGER.warning(self._attr_name + " (" + self._attr_unique_id + ") was NoneType")
+                _LOGGER.warning(self._attr_name +
+                                " (" + self._attr_unique_id + ") was NoneType")
             else:
                 if temp.dataUnit != "°C":
                     self._value = cast(StateType, temp.dataValue)
@@ -84,7 +86,7 @@ class SenertecSensor(CoordinatorEntity, SensorEntity):
             if temp != None:
                 self._unit = temp.dataUnit
         return self._unit
-    
+
     @property
     def device_class(self):
         unit = self.native_unit_of_measurement

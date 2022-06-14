@@ -6,7 +6,7 @@ from homeassistant.const import (
 from typing import Final
 import voluptuous as vol
 
-DOMAIN = "senertec_hassio"
+DOMAIN = "senertec"
 DEFAULT_POLL_INTERVAL: Final = 10
 SENERTEC_COORDINATOR = "senertec_coordinator"
 SENERTEC_SENSORS = "senertec_sensors"
@@ -18,10 +18,6 @@ SENERTEC_POLL_SERVICE: Final = "senertec"
 DEFAULT_NAME = "Senertec"
 SENERTEC_URL = "https://dachsconnect.senertec.com"
 
-from homeassistant.const import (
-    CONF_EMAIL,
-    CONF_PASSWORD,
-)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {

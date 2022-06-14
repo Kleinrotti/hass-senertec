@@ -1,9 +1,8 @@
 """Config flow for Senertec energy systems integration."""
 from __future__ import annotations
 import json
-
-import logging
 import os
+import logging
 import voluptuous as vol
 from typing import Any
 
@@ -30,11 +29,11 @@ async def validate_connection(hass: HomeAssistant, data: dict[str, Any]):
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-
+    print(os.getcwd())
     _LOGGER.debug("Trying to connect to senertec during setup")
     file = await hass.async_add_executor_job(
         open,
-        "/config/custom_components/senertec_hassio/productGroups.json",
+        os.getcwd() + "/custom_components/senertec/productGroups.json",
     )
     supportedItems = json.load(file)
     file.close()
@@ -52,7 +51,8 @@ async def validate_connection(hass: HomeAssistant, data: dict[str, Any]):
     for a in client.boards:
         points = []
         for b in a.datapoints:
-            points.append({"sourceId": b.sourceId, "friendlyName": b.friendlyName})
+            points.append(
+                {"sourceId": b.sourceId, "friendlyName": b.friendlyName})
         lst.append({"boardname": a.boardName, "datapoints": points})
     # Return info that you want to store in the config entry.
     data["model"] = units[0].model
@@ -100,7 +100,8 @@ class SenertecConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             sensors = {}
             for board in self.hass.data["sensors"]:
                 for point in board:
-                    sensors[vol.Optional(point["sourceId"], default=True)] = bool
+                    sensors[vol.Optional(
+                        point["sourceId"], default=True)] = bool
             return self.async_show_form(
                 step_id="sensors", data_schema=vol.Schema(sensors)
             )

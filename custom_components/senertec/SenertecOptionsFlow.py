@@ -6,6 +6,7 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 from .const import DOMAIN, DEFAULT_POLL_INTERVAL, DEFAULT_LANG, CONF_LANG, LANGUAGES
 from senertec.lang import lang
 
+
 class SenertecOptionsFlow(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize senertec options flow."""

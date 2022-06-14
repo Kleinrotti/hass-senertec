@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -19,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Gardena Smart System integration."""
+    """Set up the Senertec integration."""
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
@@ -28,8 +27,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def _getProductGroups(hass: HomeAssistant):
     file = await hass.async_add_executor_job(
-        open,
-        "/config/custom_components/senertec_hassio/productGroups.json",
+        open, os.getcwd() +
+        "/custom_components/senertec/productGroups.json",
     )
     supportedItems = json.load(file)
     file.close()

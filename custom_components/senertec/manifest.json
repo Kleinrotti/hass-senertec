@@ -1,5 +1,5 @@
 {
-  "domain": "senertec_hassio",
+  "domain": "senertec",
   "name": "Senertec Energy Systems",
   "version": "0.1.2",
   "issue_tracker": "https://github.com/Kleinrotti/hass-senertec/issues",

@@ -86,7 +86,8 @@ class SenertecEnergySystemCoordinator(DataUpdateCoordinator):
             """Request update."""
             await self.async_request_refresh()
 
-        self.hass.services.async_register(DOMAIN, SENERTEC_POLL_SERVICE, request_update)
+        self.hass.services.async_register(
+            DOMAIN, SENERTEC_POLL_SERVICE, request_update)
 
     async def async_update(self):
         """Update senertec data."""
