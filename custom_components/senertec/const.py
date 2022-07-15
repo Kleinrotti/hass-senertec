@@ -18,6 +18,10 @@ SENERTEC_POLL_SERVICE: Final = "senertec"
 DEFAULT_NAME = "Senertec"
 SENERTEC_URL = "https://dachsconnect.senertec.com"
 
+from homeassistant.const import (
+    CONF_EMAIL,
+    CONF_PASSWORD,
+)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
