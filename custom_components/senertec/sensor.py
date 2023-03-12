@@ -2,7 +2,11 @@
 import logging
 
 from typing import Any, cast
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -27,8 +31,7 @@ async def async_setup_entry(
                     SenertecErrorSensor(coordinator, item) for item in lists
                 )
             else:
-                async_add_entities(SenertecSensor(coordinator, item)
-                                   for item in lists)
+                async_add_entities(SenertecSensor(coordinator, item) for item in lists)
     else:
         _LOGGER.warning("No sensor data found.")
 
@@ -61,8 +64,9 @@ class SenertecSensor(CoordinatorEntity, SensorEntity):
                 None,
             )
             if temp == None:
-                _LOGGER.warning(self._attr_name +
-                                " (" + self._attr_unique_id + ") was NoneType")
+                _LOGGER.warning(
+                    self._attr_name + " (" + self._attr_unique_id + ") was NoneType"
+                )
             else:
                 if temp.dataUnit != "°C":
                     self._value = cast(StateType, temp.dataValue)
@@ -73,7 +77,7 @@ class SenertecSensor(CoordinatorEntity, SensorEntity):
             return self._value
 
     @property
-    def native_unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self):
         if self.coordinator.data:
             temp = next(
                 (
@@ -83,9 +87,9 @@ class SenertecSensor(CoordinatorEntity, SensorEntity):
                 ),
                 None,
             )
-            if temp != None:
-                self._unit = temp.dataUnit
-        return self._unit
+            self._unit = temp.dataUnit
+        if self._unit != "":
+            return self._unit
 
     @property
     def device_class(self):
@@ -96,6 +100,12 @@ class SenertecSensor(CoordinatorEntity, SensorEntity):
             return SensorDeviceClass.ENERGY
         elif unit == "°C":
             return SensorDeviceClass.TEMPERATURE
+        elif unit == "%":
+            return SensorDeviceClass.POWER_FACTOR
+        elif unit == "l":
+            return SensorDeviceClass.VOLUME_STORAGE
+        elif unit == "m":
+            return SensorDeviceClass.DISTANCE
 
     @property
     def state_class(self):
@@ -130,14 +140,14 @@ class SenertecErrorSensor(CoordinatorEntity, SensorEntity):
         self._device_serial = self.coordinator.config_entry.data["serial"]
         self._attr_name = f"{self._device_serial} Errors"
         self._attr_unique_id = "errors"
-        self._state: StateType = None
+        self._value: StateType = None
         self._model = self.coordinator.config_entry.data["model"]
 
     @property
     def native_value(self) -> StateType:
         if self.coordinator.data:
-            data = self.coordinator.data[0][0]
-            return data.code
+            self._value = self.coordinator.data[0][0]
+        return self._value.code
 
     @property
     def icon(self):

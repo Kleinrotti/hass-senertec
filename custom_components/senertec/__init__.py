@@ -2,7 +2,6 @@
 from __future__ import annotations
 import json
 import logging
-import os
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -12,6 +11,7 @@ from .const import (
     PLATFORMS,
     DOMAIN,
     SENERTEC_COORDINATOR,
+    PRODUCTGROUPSPATH
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,8 +27,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def _getProductGroups(hass: HomeAssistant):
     file = await hass.async_add_executor_job(
-        open, os.getcwd() +
-        "/custom_components/senertec/productGroups.json",
+        open,
+        PRODUCTGROUPSPATH,
     )
     supportedItems = json.load(file)
     file.close()
