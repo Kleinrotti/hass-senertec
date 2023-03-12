@@ -18,10 +18,7 @@ PLATFORMS: Final = [Platform.SENSOR]
 SENERTEC_POLL_SERVICE: Final = "senertec"
 DEFAULT_NAME = "Senertec"
 SENERTEC_URL = "https://dachsconnect.senertec.com"
-if __debug__:
-    PRODUCTGROUPSPATH = os.getcwd() + "/config/custom_components/senertec/productGroups.json"
-else:
-    PRODUCTGROUPSPATH = os.getcwd() + "/custom_components/senertec/productGroups.json"
+PRODUCTGROUPSPATH = os.path.dirname(os.path.abspath(__file__)) + "/productGroups.json"
 
 from homeassistant.const import (
     CONF_EMAIL,
