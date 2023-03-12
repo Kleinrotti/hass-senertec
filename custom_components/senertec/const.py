@@ -5,6 +5,7 @@ from homeassistant.const import (
 )
 from typing import Final
 import voluptuous as vol
+import os
 
 DOMAIN = "senertec"
 DEFAULT_POLL_INTERVAL: Final = 10
@@ -17,6 +18,10 @@ PLATFORMS: Final = [Platform.SENSOR]
 SENERTEC_POLL_SERVICE: Final = "senertec"
 DEFAULT_NAME = "Senertec"
 SENERTEC_URL = "https://dachsconnect.senertec.com"
+if __debug__:
+    PRODUCTGROUPSPATH = os.getcwd() + "/config/custom_components/senertec/productGroups.json"
+else:
+    PRODUCTGROUPSPATH = os.getcwd() + "/custom_components/senertec/productGroups.json"
 
 from homeassistant.const import (
     CONF_EMAIL,

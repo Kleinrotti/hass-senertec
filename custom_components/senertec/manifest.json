@@ -1,7 +1,7 @@
 {
   "domain": "senertec",
   "name": "Senertec Energy Systems",
-  "version": "0.1.3",
+  "version": "0.0.0",
   "issue_tracker": "https://github.com/Kleinrotti/hass-senertec/issues",
   "config_flow": true,
   "documentation": "https://github.com/Kleinrotti/hass-senertec",
