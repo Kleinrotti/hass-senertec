@@ -48,5 +48,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await senertec_coordinator.async_setup()
     await senertec_coordinator.async_refresh()
     hass.data[DOMAIN][SENERTEC_COORDINATOR] = senertec_coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
