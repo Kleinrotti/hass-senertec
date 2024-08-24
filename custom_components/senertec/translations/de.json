@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Gerät ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung ist fehlgeschlagen",
+            "invalid_auth": "Autorisierung ist ungültig",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "description": "Bitte gebe deine Senertec Cloud Zugangsdaten ein",
+                "data": {
+                    "password": "Passwort",
+                    "email": "E-Mail"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval" : "Intervall zur Datenabfrage (in Minuten)",
+                    "sensor_lang" : "Standardsprache für Sensornamen"
+                },
+                "title": "Optionen"
+            }
+        }
+    }
+}
