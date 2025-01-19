@@ -12,9 +12,12 @@ from senertec.lang import lang
 
 from .const import (
     CONF_LANG,
+    CONF_WAIT_INTERVAL,
     DEFAULT_LANG,
     DEFAULT_POLL_INTERVAL,
+    DEFAULT_WAIT_INTERVAL,
     DOMAIN,
+    SELECTED_DEVICES,
     SENERTEC_POLL_SERVICE,
 )
 
@@ -40,16 +43,16 @@ class SenertecCoordinator(DataUpdateCoordinator):
         )
         language = self.config_entry.options.get(CONF_LANG, DEFAULT_LANG)
         self.senertec_client = senertec(lang[language])
+        self.wait = config_entry.options.get(CONF_WAIT_INTERVAL, DEFAULT_WAIT_INTERVAL)
         self.senertec_client.messagecallback = self._ws_callback
         self.supportedItems = supportedItems
-        # self._hass = hass
 
     def _fetch(self):
         _LOGGER.debug("Starting Senertec energy system connection")
         try:
             login = self.senertec_client.login(
-                self.config_entry.data[CONF_EMAIL],
-                self.config_entry.data[CONF_PASSWORD],
+                self.config_entry.data.get(CONF_EMAIL),
+                self.config_entry.data.get(CONF_PASSWORD),
             )
             if not login:
                 raise ConfigEntryAuthFailed("Credentials seem to be expired or invalid")
@@ -58,10 +61,13 @@ class SenertecCoordinator(DataUpdateCoordinator):
                 _LOGGER.error("Login/init failed")
                 return
             units = self.senertec_client.getUnits()
+            selected_devices = self.config_entry.data.get(SELECTED_DEVICES)
             if len(units) == 0:
                 _LOGGER.error("No devices were found")
                 return
             for unit in units:
+                if unit.serial not in selected_devices:
+                    continue
                 self.data[unit.serial] = {}
                 self.data[unit.serial]["sensors"] = {}
                 self.data[unit.serial]["device"] = unit
@@ -80,7 +86,7 @@ class SenertecCoordinator(DataUpdateCoordinator):
         try:
             self.senertec_client.request(self.supportedItems)
             # wait 5 seconds for websocket to receive data
-            time.sleep(5)
+            time.sleep(self.wait)
         except Exception as ex:
             _LOGGER.error(ex)
 

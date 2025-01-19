@@ -20,6 +20,12 @@
           "email": "E-Mail"
         }
       },
+      "devices": {
+        "description": "Device selection",
+        "data": {
+          "selected_devices": "Select your devices here"
+        }
+      },
       "reauth_confirm": {
         "title": "Re-authenticate",
         "description": "The Senertec integration needs to re-authenticate your account"
@@ -31,6 +37,7 @@
       "init": {
         "data": {
           "scan_interval": "Interval to poll data (minutes)",
+          "wait_interval": "Time to wait for Websocket data to be received (seconds)",
           "sensor_lang": "Default language for sensor names"
         },
         "title": "Options"

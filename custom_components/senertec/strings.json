@@ -2,10 +2,16 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please enter your credentials.",
+        "description": "Please enter your credentials",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "devices": {
+        "description": "Selection of devices",
+        "data": {
+          "selected_devices": "[%key:common::config_flow::data::selected_devices%]"
         }
       },
       "reauth_confirm": {
@@ -31,6 +37,7 @@
       "init": {
         "data": {
           "scan_interval": "[%key:common::options_flow::scan_interval%]",
+          "wait_interval": "[%key:common::options_flow::wait_interval%]",
           "sensor_lang": "[%key:common::options_flow::sensor_lang%]"
         },
         "title": "[%key:common::options_flow::title%]"

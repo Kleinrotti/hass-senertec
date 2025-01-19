@@ -10,11 +10,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er, selector
+from homeassistant.helpers.selector import SelectOptionDict
 from senertec.client import senertec
 
-from .const import DOMAIN, STEP_USER_DATA_SCHEMA
+from .const import DEVICES, DOMAIN, SELECTED_DEVICES, STEP_USER_DATA_SCHEMA
 from .OptionsFlowHandler import OptionsFlowHandler
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,17 +34,26 @@ async def validate_connection(hass: HomeAssistant, data: dict[str, Any]):
         raise InvalidAuth
     if not await hass.async_add_executor_job(client.init):
         raise InitFailed
-    units = await hass.async_add_executor_job(client.getUnits)
-    if len(units) == 0:
+    devices = await hass.async_add_executor_job(client.getUnits)
+    if len(devices) == 0:
         raise NoUnits
     await hass.async_add_executor_job(client.logout)
-    _LOGGER.debug("Successfully connected to senertec during setup")
+    return {
+        DEVICES: [
+            SelectOptionDict(label=f"{dev.model} ({dev.serial})", value=dev.serial)
+            for dev in devices
+        ]
+    }
 
 
 class SenertecConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Senertec energy systems integration."""
 
     VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the Cloudflare config flow."""
+        self.senertec_config: dict[str, Any] = {}
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -64,38 +74,61 @@ class SenertecConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
-
+    ) -> config_entries.ConfigFlowResult:
         errors = {}
+        if user_input is not None:
+            try:
+                self.senertec_config.update(
+                    await validate_connection(self.hass, user_input)
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except NoUnits:
+                errors["base"] = "no_units"
+            except InitFailed:
+                errors["base"] = "init_failed"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            if not errors:
+                self.senertec_config.update(user_input)
 
-        try:
-            await validate_connection(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except NoUnits:
-            errors["base"] = "no_units"
-        except InitFailed:
-            errors["base"] = "init_failed"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            await self.async_set_unique_id(user_input[CONF_EMAIL])
+                return await self.async_step_devices()
+
+        return self.async_show_form(
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_devices(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        if user_input is not None:
+            self.senertec_config.update(user_input)
+            await self.async_set_unique_id(self.senertec_config[CONF_EMAIL])
             if self.source == config_entries.SOURCE_REAUTH:
                 self._abort_if_unique_id_mismatch()
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=f"Senertec - {user_input[CONF_EMAIL]}", data=user_input
+                title=f"Senertec - {self.senertec_config[CONF_EMAIL]}",
+                data=self.senertec_config,
             )
-
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="devices",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        SELECTED_DEVICES, default=False
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=self.senertec_config[DEVICES],
+                            mode=selector.SelectSelectorMode.LIST,
+                            multiple=True,
+                        ),
+                    )
+                }
+            ),
         )
 
     @staticmethod

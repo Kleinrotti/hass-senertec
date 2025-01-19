@@ -20,6 +20,12 @@
           "email": "E-Mail"
         }
       },
+      "devices": {
+        "description": "Geräte auswahl",
+        "data": {
+          "selected_devices": "Wähle hier deine Geräte aus"
+        }
+      },
       "reauth_confirm": {
         "title": "Neu authentifizieren",
         "description": "Die Senertec Integration benötigt eine erneute Authentifizierung"
@@ -31,6 +37,7 @@
       "init": {
         "data": {
           "scan_interval": "Intervall zur Datenabfrage (in Minuten)",
+          "wait_interval": "Zeit die gewartet werden soll bis Daten vom Websocket empfangen werden (in Sekunden)",
           "sensor_lang": "Standardsprache für Sensornamen"
         },
         "title": "Optionen"
