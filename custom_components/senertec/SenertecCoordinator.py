@@ -88,7 +88,7 @@ class SenertecCoordinator(DataUpdateCoordinator):
             # wait 5 seconds for websocket to receive data
             time.sleep(self.wait)
         except Exception as ex:
-            _LOGGER.error(ex)
+            _LOGGER.error(ex.with_traceback())
 
     async def async_setup(self) -> None:
         """Set up senertec."""

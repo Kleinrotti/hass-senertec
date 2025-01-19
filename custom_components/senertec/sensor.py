@@ -56,34 +56,32 @@ class SenertecSensor(CoordinatorEntity, SensorEntity):
         self._unit = None
         self._name = None
 
+    def _getSensor(self):
+        return (
+            self.coordinator.data.get(self.device.serial, {})
+            .get("sensors", {})
+            .get(self._datapoint)
+        )
+
     @property
     def name(self):
-        entity = self.coordinator.data[self.device.serial]["sensors"].get(
-            self._datapoint, None
-        )
+        entity = self._getSensor()
         if entity is not None:
             self._name = entity.friendlyDataName
         return self._name
 
     @property
     def native_value(self) -> StateType:
-        if self.coordinator.data:
-            value = self.coordinator.data[self.device.serial]["sensors"].get(
-                self._datapoint, None
-            )
-            if value is None:
-                _LOGGER.debug(self.name + " (" + self._datapoint + ") was NoneType")
+        value = self._getSensor()
+        if value is not None:
             self._value = cast(StateType, value.dataValue)
         return self._value
 
     @property
     def native_unit_of_measurement(self):
-        if self.coordinator.data:
-            value = self.coordinator.data[self.device.serial]["sensors"].get(
-                self._datapoint, None
-            )
-            if value.dataUnit != "":
-                self._unit = value.dataUnit
+        value = self._getSensor()
+        if value.dataUnit != "":
+            self._unit = value.dataUnit
         return self._unit
 
     @property
@@ -122,6 +120,7 @@ class SenertecSensor(CoordinatorEntity, SensorEntity):
             name=f"{self.device.model} - {self.device.serial}",
             manufacturer="Senertec",
             model=self.device.model,
+            model_id=self.device.productGroup,
             serial_number=self.device.serial,
             configuration_url=SENERTEC_URL,
         )
@@ -147,12 +146,13 @@ class SenertecErrorSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
-        if self.coordinator.data:
-            merged = ""
-            # merge all error codes to one value/string
-            for error in self.coordinator.data[self.device.serial]["errors"]:
-                merged += f"{error.code},"
-            self._value = merged.removesuffix(",")
+        merged = ""
+        # merge all error codes to one value/string
+        for error in self.coordinator.data.get(self.device.serial, {}).get(
+            "errors", {}
+        ):
+            merged += f"{error.code},"
+        self._value = merged.removesuffix(",")
         return self._value
 
     @property
@@ -162,25 +162,25 @@ class SenertecErrorSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        if self.coordinator.data:
-            translation = ""
-            category = ""
-            timestamp = ""
-            board = ""
-            for error in self.coordinator.data[self.device.serial]["errors"]:
-                translation += f"{error.code}: {error.errorTranslation}\n"
-                category += f"{error.code}: {error.errorCategory}\n"
-                timestamp += (
-                    f"{error.code}: {error.timestamp.strftime('%Y-%m-%d %H:%M:%S')}\n"
-                )
-                board += f"{error.code}: {error.boardName}\n"
-            return {
-                "translation": translation,
-                "category": category,
-                "timestamp": timestamp,
-                "board": board,
-            }
-        return None
+        translation = ""
+        category = ""
+        timestamp = ""
+        board = ""
+        for error in self.coordinator.data.get(self.device.serial, {}).get(
+            "errors", {}
+        ):
+            translation += f"{error.code}: {error.errorTranslation}\n"
+            category += f"{error.code}: {error.errorCategory}\n"
+            timestamp += (
+                f"{error.code}: {error.timestamp.strftime('%Y-%m-%d %H:%M:%S')}\n"
+            )
+            board += f"{error.code}: {error.boardName}\n"
+        return {
+            "translation": translation,
+            "category": category,
+            "timestamp": timestamp,
+            "board": board,
+        }
 
     @property
     def entity_category(self):
@@ -196,6 +196,7 @@ class SenertecErrorSensor(CoordinatorEntity, SensorEntity):
             name=f"{self.device.model} - {self.device.serial}",
             manufacturer="Senertec",
             model=self.device.model,
+            model_id=self.device.productGroup,
             serial_number=self.device.serial,
             configuration_url=SENERTEC_URL,
         )
