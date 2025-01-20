@@ -1,24 +1,22 @@
 """Config flow for Senertec energy systems integration."""
-from __future__ import annotations
-import json
-import logging
-import voluptuous as vol
-from typing import Any
 
-from homeassistant.const import (
-    CONF_EMAIL,
-    CONF_PASSWORD,
-)
+from __future__ import annotations
+
+import logging
+from typing import Any, Mapping
+
+import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import entity_registry as er, selector
+from homeassistant.helpers.selector import SelectOptionDict
 from senertec.client import senertec
 
-
-from .const import DOMAIN, DEFAULT_NAME, STEP_USER_DATA_SCHEMA, PRODUCTGROUPSPATH
-from .SenertecOptionsFlow import SenertecOptionsFlow
+from .const import DEVICES, DOMAIN, SELECTED_DEVICES, STEP_USER_DATA_SCHEMA
+from .OptionsFlowHandler import OptionsFlowHandler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,33 +27,23 @@ async def validate_connection(hass: HomeAssistant, data: dict[str, Any]):
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     _LOGGER.debug("Trying to connect to senertec during setup")
-    file = await hass.async_add_executor_job(
-        open,
-        PRODUCTGROUPSPATH,
-    )
-    supportedItems = json.load(file)
-    file.close()
-    client = senertec(
-        dataNames=supportedItems, email=data[CONF_EMAIL], password=data[CONF_PASSWORD]
-    )
-    if not await hass.async_add_executor_job(client.login):
+    client = senertec()
+    if not await hass.async_add_executor_job(
+        client.login, data[CONF_EMAIL], data[CONF_PASSWORD]
+    ):
         raise InvalidAuth
-    await hass.async_add_executor_job(client.init)
-    units = await hass.async_add_executor_job(client.getUnits)
-    await hass.async_add_executor_job(client.connectUnit, units[0].serial)
+    if not await hass.async_add_executor_job(client.init):
+        raise InitFailed
+    devices = await hass.async_add_executor_job(client.getUnits)
+    if len(devices) == 0:
+        raise NoUnits
     await hass.async_add_executor_job(client.logout)
-    _LOGGER.debug("Successfully connected to senertec during setup.")
-    lst = []
-    for a in client.boards:
-        points = []
-        for b in a.datapoints:
-            points.append({"sourceId": b.sourceId, "friendlyName": b.friendlyName})
-        lst.append({"boardname": a.boardName, "datapoints": points})
-    # Return info that you want to store in the config entry.
-    data["model"] = units[0].model
-    data["serial"] = units[0].serial
-    data["sensors"] = lst
-    return data
+    return {
+        DEVICES: [
+            SelectOptionDict(label=f"{dev.model} ({dev.serial})", value=dev.serial)
+            for dev in devices
+        ]
+    }
 
 
 class SenertecConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -63,49 +51,96 @@ class SenertecConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    def __init__(self) -> None:
+        """Initialize the Cloudflare config flow."""
+        self.senertec_config: dict[str, Any] = {}
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> config_entries.ConfigFlowResult:
+        """Perform reauth upon an login authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
             )
+        return await self.async_step_user()
 
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
         errors = {}
-
-        try:
-            info = await validate_connection(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            await self.async_set_unique_id(info["serial"])
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=DEFAULT_NAME, data=info)
+        if user_input:
+            try:
+                self.senertec_config.update(
+                    await validate_connection(self.hass, user_input)
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except NoUnits:
+                errors["base"] = "no_units"
+            except InitFailed:
+                errors["base"] = "init_failed"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            if not errors:
+                self.senertec_config.update(user_input)
+                await self.async_set_unique_id(self.senertec_config[CONF_EMAIL])
+                if self.source != config_entries.SOURCE_REAUTH:
+                    self._abort_if_unique_id_configured()
+                    return await self.async_step_devices()
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates=user_input,
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_sensors(self, user_input=None):
-        if not user_input:
-            sensors = {}
-            for board in self.hass.data["sensors"]:
-                for point in board:
-                    sensors[vol.Optional(point["sourceId"], default=True)] = bool
-            return self.async_show_form(
-                step_id="sensors", data_schema=vol.Schema(sensors)
+    async def async_step_devices(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        if user_input:
+            self.senertec_config.update(user_input)
+            return self.async_create_entry(
+                title=f"Senertec - {self.senertec_config[CONF_EMAIL]}",
+                data=self.senertec_config,
             )
+        return self.async_show_form(
+            step_id="devices",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        SELECTED_DEVICES, default=False
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=self.senertec_config[DEVICES],
+                            mode=selector.SelectSelectorMode.LIST,
+                            multiple=True,
+                        ),
+                    )
+                }
+            ),
+        )
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
-        return SenertecOptionsFlow(config_entry)
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Create the options flow."""
+        return OptionsFlowHandler()
 
 
 class CannotConnect(HomeAssistantError):
@@ -114,3 +149,11 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class NoUnits(HomeAssistantError):
+    """Error to indicate there were no energy units found."""
+
+
+class InitFailed(HomeAssistantError):
+    """Error to indicate the initialization failed."""

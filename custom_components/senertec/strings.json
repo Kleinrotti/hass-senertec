@@ -2,20 +2,34 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please enter your credentials.",
+        "description": "Please enter your credentials",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "devices": {
+        "description": "Selection of devices",
+        "data": {
+          "selected_devices": "[%key:common::config_flow::data::selected_devices%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Senertec integration needs to re-authenticate your account"
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_units": "[%key:common::config_flow::error::no_units%]",
+      "init_failed": "[%key:common::config_flow::error::init_failed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "[%key:common::config_flow::abort::unique_id_mismatch%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
@@ -23,6 +37,7 @@
       "init": {
         "data": {
           "scan_interval": "[%key:common::options_flow::scan_interval%]",
+          "wait_interval": "[%key:common::options_flow::wait_interval%]",
           "sensor_lang": "[%key:common::options_flow::sensor_lang%]"
         },
         "title": "[%key:common::options_flow::title%]"

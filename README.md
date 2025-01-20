@@ -7,14 +7,17 @@ Custom component to support Senertec energy systems.
 
 ## Table of Contents
 
+- [Home Assistant integration for Senertec](#home-assistant-integration-for-senertec)
+  - [Table of Contents](#table-of-contents)
   - [About](#about)
   - [Installation](#installation)
     - [Installation through HACS](#installation-through-hacs)
     - [Manual installation](#manual-installation)
+  - [Updating](#updating)
+    - [Before updating please read the release changelog and backup your productGroups.json](#before-updating-please-read-the-release-changelog-and-backup-your-productgroupsjson)
   - [Configuration](#configuration)
     - [Home Assistant](#home-assistant)
   - [Supported devices](#supported-devices)
-  - [Development](#development)
     - [Debugging](#debugging)
 
 ## About
@@ -23,7 +26,7 @@ With this integration you can integrate the sensors of your senertec heating sys
 
 ## Installation
 
-Requires Home Assistant 2021.11.0 or newer.
+Requires Home Assistant 2024.10.0 or newer.
 You need an account for Senertec Dachsconnect Gen2.
 
 ### Installation through HACS
@@ -56,6 +59,10 @@ cd custom_components
 ln -s ../hass-senertec/custom_components/senertec
 ```
 
+## Updating
+
+### Before updating please read the release changelog and backup your productGroups.json
+
 ## Configuration
 
 ### Home Assistant
@@ -77,7 +84,8 @@ The following devices are currently supported:
 - Senertec Dachs Gen2 F5.5
 - Remeha eLecta Ace 300
 
-## Development
+Other devices should work too if you extend the shipped productGroups.json.
+How that file works is described [here](https://github.com/Kleinrotti/py-senertec?tab=readme-ov-file#filtering-recommended). It's located in the integration folder.
 
 ### Debugging
 

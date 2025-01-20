@@ -1,32 +1,47 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Device is already configured"
-        },
-        "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
-        },
-        "step": {
-            "user": {
-                "description": "Please enter your credentials.",
-                "data": {
-                    "password": "Password",
-                    "email": "E-Mail"
-                }
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "unique_id_mismatch": "Unique ID mismatch",
+      "reauth_successful": "Authentication successful"
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval" : "Interval to poll data (minutes)",
-                    "sensor_lang" : "Default language for sensor names"
-                },
-                "title": "Options"
-            }
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "User/Email or password wrong",
+      "no_units": "No devices were found",
+      "init_failed": "Initialization of senertec platform failed",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "description": "Please enter your credentials.",
+        "data": {
+          "password": "Password",
+          "email": "E-Mail"
         }
+      },
+      "devices": {
+        "description": "Device selection",
+        "data": {
+          "selected_devices": "Select your devices here"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate",
+        "description": "The Senertec integration needs to re-authenticate your account"
+      }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Interval to poll data (minutes)",
+          "wait_interval": "Time to wait for Websocket data to be received (seconds)",
+          "sensor_lang": "Default language for sensor names"
+        },
+        "title": "Options"
+      }
+    }
+  }
 }

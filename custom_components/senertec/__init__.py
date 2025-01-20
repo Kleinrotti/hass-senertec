@@ -1,18 +1,15 @@
 """The Senertec energy systems integration integration."""
+
 from __future__ import annotations
+
 import json
 import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .SenertecEnergySystemCoordinator import SenertecEnergySystemCoordinator
-
-from .const import (
-    PLATFORMS,
-    DOMAIN,
-    SENERTEC_COORDINATOR,
-    PRODUCTGROUPSPATH
-)
+from .const import DOMAIN, PLATFORMS, PRODUCTGROUPSPATH, SENERTEC_COORDINATOR
+from .SenertecCoordinator import SenertecCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Setting up senertec component")
 
     supportedItems = await _getProductGroups(hass)
-    senertec_coordinator = SenertecEnergySystemCoordinator(
+    senertec_coordinator = SenertecCoordinator(
         hass,
         entry,
         supportedItems,

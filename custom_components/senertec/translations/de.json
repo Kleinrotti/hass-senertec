@@ -1,32 +1,47 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Gerät ist bereits konfiguriert"
-        },
-        "error": {
-            "cannot_connect": "Verbindung ist fehlgeschlagen",
-            "invalid_auth": "Autorisierung ist ungültig",
-            "unknown": "Unerwarteter Fehler"
-        },
-        "step": {
-            "user": {
-                "description": "Bitte gebe deine Senertec Cloud Zugangsdaten ein",
-                "data": {
-                    "password": "Passwort",
-                    "email": "E-Mail"
-                }
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Gerät ist bereits konfiguriert",
+      "unique_id_mismatch": "Unique ID stimmt nicht überein",
+      "reauth_successful": "Login erfolgreich"
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval" : "Intervall zur Datenabfrage (in Minuten)",
-                    "sensor_lang" : "Standardsprache für Sensornamen"
-                },
-                "title": "Optionen"
-            }
+    "error": {
+      "cannot_connect": "Verbindung ist fehlgeschlagen",
+      "invalid_auth": "Benutzer/Email oder Password falsch",
+      "no_units": "Es wurden keine Geräte gefunden",
+      "init_failed": "Initialisierung der Senertec Platform fehlgeschlagen",
+      "unknown": "Unerwarteter Fehler"
+    },
+    "step": {
+      "user": {
+        "description": "Bitte gebe deine Senertec Cloud Zugangsdaten ein",
+        "data": {
+          "password": "Passwort",
+          "email": "E-Mail"
         }
+      },
+      "devices": {
+        "description": "Geräte auswahl",
+        "data": {
+          "selected_devices": "Wähle hier deine Geräte aus"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Neu authentifizieren",
+        "description": "Die Senertec Integration benötigt eine erneute Authentifizierung"
+      }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Intervall zur Datenabfrage (in Minuten)",
+          "wait_interval": "Zeit die gewartet werden soll bis Daten vom Websocket empfangen werden (in Sekunden)",
+          "sensor_lang": "Standardsprache für Sensornamen"
+        },
+        "title": "Optionen"
+      }
+    }
+  }
 }

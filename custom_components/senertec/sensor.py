@@ -1,7 +1,8 @@
 """Support for senertec sensors."""
-import logging
 
+import logging
 from typing import Any, cast
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -9,12 +10,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.typing import StateType
-from . import SenertecEnergySystemCoordinator
-from senertec.client import canipValue, canipError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
+from senertec.client import canipError, canipValue, energyUnit
 
+from . import SenertecCoordinator
 from .const import DOMAIN, SENERTEC_COORDINATOR, SENERTEC_URL
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,129 +27,133 @@ async def async_setup_entry(
 ):
     coordinator = hass.data[DOMAIN][SENERTEC_COORDINATOR]
     if coordinator.data:
-        for lists in coordinator.data:
-            if isinstance(lists[0], canipError):
-                async_add_entities(
-                    SenertecErrorSensor(coordinator, item) for item in lists
-                )
-            else:
-                async_add_entities(SenertecSensor(coordinator, item) for item in lists)
+        for value in coordinator.data.values():
+            device = value.get("device")
+            sensors = value.get("sensors", {})
+            for sensor_value in sensors.values():
+                async_add_entities([SenertecSensor(coordinator, sensor_value, device)])
+            errors = value.get("errors", [])
+            async_add_entities([SenertecErrorSensor(coordinator, errors, device)])
     else:
-        _LOGGER.warning("No sensor data found.")
+        _LOGGER.warning("No sensor data found")
 
 
 class SenertecSensor(CoordinatorEntity, SensorEntity):
     """Representation of a senertec sensor."""
 
-    coordinator: SenertecEnergySystemCoordinator
+    coordinator: SenertecCoordinator
 
-    def __init__(self, coordinator, value: canipValue):
+    def __init__(self, coordinator, value: canipValue, device: energyUnit):
         """Initialize the senertec sensor."""
         super().__init__(coordinator)
-        self._device_serial = self.coordinator.config_entry.data["serial"]
-        self._attr_name = f"{self._device_serial} {value.friendlyDataName}"
-        self._attr_unique_id = value.sourceDatapoint
+        self.device = device
+        self._datapoint = value.sourceDatapoint
+        # create a unique id from device serial + boardname which is the sensor connected to + the sensor datapoint id
+        uid = "sensor." + slugify(f"{self.device.serial}_{value.sourceDatapoint}")
+        self.entity_id = uid
+        self._attr_unique_id = uid
         self._value: StateType = None
-        self._model = self.coordinator.config_entry.data["model"]
         self._unit = None
+        self._name = None
+
+    def _getSensor(self):
+        return (
+            self.coordinator.data.get(self.device.serial, {})
+            .get("sensors", {})
+            .get(self._datapoint)
+        )
+
+    @property
+    def name(self):
+        entity = self._getSensor()
+        if entity is not None:
+            self._name = entity.friendlyDataName
+        return self._name
 
     @property
     def native_value(self) -> StateType:
-        """Return native value for entity."""
-        if self.coordinator.data:
-            temp = next(
-                (
-                    x
-                    for x in self.coordinator.data[1]
-                    if x.sourceDatapoint == self._attr_unique_id
-                ),
-                None,
-            )
-            if temp == None:
-                _LOGGER.warning(
-                    self._attr_name + " (" + self._attr_unique_id + ") was NoneType"
-                )
-            else:
-                if temp.dataUnit != "°C":
-                    self._value = cast(StateType, temp.dataValue)
-                else:
-                    # filter out wrong measurements
-                    if temp.dataValue > -50 and temp.dataValue < 250:
-                        self._value = cast(StateType, temp.dataValue)
-            return self._value
+        value = self._getSensor()
+        if value is not None:
+            self._value = cast(StateType, value.dataValue)
+        return self._value
 
     @property
     def native_unit_of_measurement(self):
-        if self.coordinator.data:
-            temp = next(
-                (
-                    x
-                    for x in self.coordinator.data[1]
-                    if x.sourceDatapoint == self._attr_unique_id
-                ),
-                None,
-            )
-            self._unit = temp.dataUnit
-        if self._unit != "":
-            return self._unit
+        value = self._getSensor()
+        if value.dataUnit != "":
+            self._unit = value.dataUnit
+        return self._unit
 
     @property
     def device_class(self):
         unit = self.native_unit_of_measurement
         if unit == "W":
             return SensorDeviceClass.POWER
-        elif unit == "Wh" or unit == "kWh":
+        if unit in ("Wh", "kWh"):
             return SensorDeviceClass.ENERGY
-        elif unit == "°C":
+        if unit == "°C":
             return SensorDeviceClass.TEMPERATURE
-        elif unit == "%":
+        if unit == "%":
             return SensorDeviceClass.POWER_FACTOR
-        elif unit == "l":
+        if unit == "l":
             return SensorDeviceClass.VOLUME_STORAGE
-        elif unit == "m":
+        if unit == "m":
             return SensorDeviceClass.DISTANCE
+        return None
 
     @property
     def state_class(self):
         unit = self.native_unit_of_measurement
-        if unit == "W" or unit == "Rpm":
+        if unit in ("W", "Rpm"):
             return SensorStateClass.MEASUREMENT
-        elif unit == "Wh" or unit == "kWh" or unit == "Hours":
+        if unit in ("Wh", "kWh", "Hours"):
             return SensorStateClass.TOTAL_INCREASING
+        return None
 
     @property
-    def device_info(self):
-        return {
-            "identifiers": {
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self._device_serial)
+                (DOMAIN, self.device.serial)
             },
-            "name": self._device_serial,
-            "manufacturer": "Senertec",
-            "model": self._model,
-            "configuration_url": SENERTEC_URL,
-        }
+            name=f"{self.device.model} - {self.device.serial}",
+            manufacturer="Senertec",
+            model=self.device.model,
+            model_id=self.device.productGroup,
+            serial_number=self.device.serial,
+            configuration_url=SENERTEC_URL,
+        )
 
 
 class SenertecErrorSensor(CoordinatorEntity, SensorEntity):
-    """Representation of a senertec sensor."""
+    """Representation of a senertec error sensor."""
 
-    coordinator: SenertecEnergySystemCoordinator
+    coordinator: SenertecCoordinator
 
-    def __init__(self, coordinator, value: canipError):
+    def __init__(self, coordinator, value: list[canipError], device: energyUnit):
         """Initialize the senertec sensor."""
         super().__init__(coordinator)
-        self._device_serial = self.coordinator.config_entry.data["serial"]
-        self._attr_name = f"{self._device_serial} Errors"
-        self._attr_unique_id = "errors"
+        self.device = device
+        uid = "sensor." + slugify(f"{device.serial} errors")
+        self.entity_id = uid
+        self._attr_unique_id = uid
         self._value: StateType = None
-        self._model = self.coordinator.config_entry.data["model"]
+
+    @property
+    def name(self):
+        return "Current Errors"
 
     @property
     def native_value(self) -> StateType:
-        if self.coordinator.data:
-            self._value = self.coordinator.data[0][0]
-        return self._value.code
+        merged = ""
+        # merge all error codes to one value/string
+        for error in self.coordinator.data.get(self.device.serial, {}).get(
+            "errors", {}
+        ):
+            merged += f"{error.code},"
+        self._value = merged.removesuffix(",")
+        return self._value
 
     @property
     def icon(self):
@@ -156,28 +162,41 @@ class SenertecErrorSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        if self.coordinator.data:
-            data = self.coordinator.data[0][0]
-            return {
-                "translation": data.errorTranslation,
-                "category": data.errorCategory,
-                "timestamp": data.timestamp,
-                "board": data.boardName,
-            }
+        translation = ""
+        category = ""
+        timestamp = ""
+        board = ""
+        for error in self.coordinator.data.get(self.device.serial, {}).get(
+            "errors", {}
+        ):
+            translation += f"{error.code}: {error.errorTranslation}\n"
+            category += f"{error.code}: {error.errorCategory}\n"
+            timestamp += (
+                f"{error.code}: {error.timestamp.strftime('%Y-%m-%d %H:%M:%S')}\n"
+            )
+            board += f"{error.code}: {error.boardName}\n"
+        return {
+            "translation": translation,
+            "category": category,
+            "timestamp": timestamp,
+            "board": board,
+        }
 
     @property
     def entity_category(self):
         return EntityCategory.DIAGNOSTIC
 
     @property
-    def device_info(self):
-        return {
-            "identifiers": {
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self._device_serial)
+                (DOMAIN, self.device.serial)
             },
-            "name": self._device_serial,
-            "manufacturer": "Senertec",
-            "model": self._model,
-            "configuration_url": SENERTEC_URL,
-        }
+            name=f"{self.device.model} - {self.device.serial}",
+            manufacturer="Senertec",
+            model=self.device.model,
+            model_id=self.device.productGroup,
+            serial_number=self.device.serial,
+            configuration_url=SENERTEC_URL,
+        )
