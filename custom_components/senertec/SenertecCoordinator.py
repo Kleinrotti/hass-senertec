@@ -43,52 +43,49 @@ class SenertecCoordinator(DataUpdateCoordinator):
         )
         language = self.config_entry.options.get(CONF_LANG, DEFAULT_LANG)
         self.senertec_client = senertec(lang[language])
+        # wait time for websocket data
         self.wait = config_entry.options.get(CONF_WAIT_INTERVAL, DEFAULT_WAIT_INTERVAL)
         self.senertec_client.messagecallback = self._ws_callback
         self.supportedItems = supportedItems
 
     def _fetch(self):
-        _LOGGER.debug("Starting Senertec energy system connection")
-        try:
-            login = self.senertec_client.login(
-                self.config_entry.data.get(CONF_EMAIL),
-                self.config_entry.data.get(CONF_PASSWORD),
-            )
-            if not login:
-                raise ConfigEntryAuthFailed("Credentials seem to be expired or invalid")
-            init = self.senertec_client.init()
-            if not init:
-                _LOGGER.error("Login/init failed")
-                return
-            units = self.senertec_client.getUnits()
-            selected_devices = self.config_entry.data.get(SELECTED_DEVICES)
-            if len(units) == 0:
-                _LOGGER.error("No devices were found")
-                return
-            for unit in units:
-                if unit.serial not in selected_devices:
-                    continue
-                self.data[unit.serial] = {}
-                self.data[unit.serial]["sensors"] = {}
-                self.data[unit.serial]["device"] = unit
-                if not self.senertec_client.connectUnit(unit.serial):
-                    _LOGGER.error("Connecting to device: %s failed", unit.serial)
-                    continue
-                errors = self.senertec_client.getErrors()
-                self.data[unit.serial]["errors"] = errors
-                self._request_sensors()
-                self.senertec_client.disconnectUnit()
-        except Exception as ex:
-            _LOGGER.error(ex.with_traceback())
+        login = self.senertec_client.login(
+            self.config_entry.data.get(CONF_EMAIL),
+            self.config_entry.data.get(CONF_PASSWORD),
+        )
+        if not login:
+            raise ConfigEntryAuthFailed("Credentials seem to be expired or invalid")
+        init = self.senertec_client.init()
+        if not init:
+            _LOGGER.error("Init failed")
+            return
+        units = self.senertec_client.getUnits()
+        selected_devices = self.config_entry.data.get(SELECTED_DEVICES)
+        if len(units) == 0:
+            _LOGGER.error("No devices were found")
+            return
+        for unit in units:
+            if unit.serial not in selected_devices:
+                continue
+            self.data[unit.serial] = {}
+            self.data[unit.serial]["sensors"] = {}
+            self.data[unit.serial]["device"] = unit
+            if not self.senertec_client.connectUnit(unit.serial):
+                _LOGGER.error("Connecting to device: %s failed", unit.serial)
+                continue
+            errors = self.senertec_client.getErrors()
+            self.data[unit.serial]["errors"] = errors
+            self._request_sensors()
+            self.senertec_client.disconnectUnit()
 
     def _request_sensors(self):
         _LOGGER.debug("Polling senertec sensors")
         try:
             self.senertec_client.request(self.supportedItems)
-            # wait 5 seconds for websocket to receive data
+            # wait for websocket to receive data
             time.sleep(self.wait)
         except Exception as ex:
-            _LOGGER.error(ex.with_traceback())
+            _LOGGER.error(ex)
 
     async def async_setup(self) -> None:
         """Set up senertec."""
