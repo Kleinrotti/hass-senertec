@@ -5,24 +5,19 @@ on:
   pull_request:
   schedule:
     - cron: "0 0 * * *"
+  workflow_dispatch:
 
 jobs:
   validate-hassfest:
-    name: Hassfest validation
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: validation
-        uses: home-assistant/actions/hassfest@master
+        - uses: "actions/checkout@v3"
+        - uses: home-assistant/actions/hassfest@master
 
   validate-hacs:
-    name: HACS validation
     runs-on: "ubuntu-latest"
     steps:
-      - name: checkout
-        uses: "actions/checkout@v2"
-      - name: validation 
+      - name: HACS validation
         uses: "hacs/action@main"
         with:
-          category: "integration"
+            category: "integration"

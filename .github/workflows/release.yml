@@ -20,7 +20,7 @@ jobs:
           cd custom_components
           tar -czvf senertec-${{ env.RELEASE_VERSION }}.tar.gz senertec
       - name: Release files
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           fail_on_unmatched_files: true
           files: |
