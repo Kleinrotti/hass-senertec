@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/Kleinrotti/hass-senertec/issues",
   "requirements": ["py-senertec~=1.0.0"],
-  "version": "0.0.0"
+  "version": "1.0.1"
 }
