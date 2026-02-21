@@ -71,21 +71,22 @@ class SenertecCoordinator(DataUpdateCoordinator):
             self.data[unit.serial]["sensors"] = {}
             self.data[unit.serial]["device"] = unit
             if not self.senertec_client.connectUnit(unit.serial):
-                _LOGGER.error("Connecting to device: %s failed", unit.serial)
+                _LOGGER.error("Connection to device: %s failed", unit.model)
                 continue
+            _LOGGER.info("Connection to device: %s successful", unit.model)
             errors = self.senertec_client.getErrors()
             self.data[unit.serial]["errors"] = errors
             self._request_sensors()
             self.senertec_client.disconnectUnit()
 
     def _request_sensors(self):
-        _LOGGER.debug("Polling senertec sensors")
+        _LOGGER.debug("Requesting Senertec heating unit sensors...")
         try:
             self.senertec_client.request(self.supportedItems)
             # wait for websocket to receive data
             time.sleep(self.wait)
-        except Exception as ex:
-            _LOGGER.error(ex)
+        except KeyError as ex:
+            _LOGGER.error("Please check your productGroups.json. An entry for your heating unit model is missing. %s", ex)
 
     async def async_setup(self) -> None:
         """Set up senertec."""
@@ -98,11 +99,11 @@ class SenertecCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Update senertec data."""
-        _LOGGER.debug("Starting data update")
+        _LOGGER.debug("Starting sensor data update")
         self.data = {}
         await self.hass.async_add_executor_job(self._fetch)
         await self._stop()
-        _LOGGER.debug("Finished data update")
+        _LOGGER.debug("Finished sensor data update")
         return self.data
 
     async def _stop(self):
@@ -110,6 +111,6 @@ class SenertecCoordinator(DataUpdateCoordinator):
         await self.hass.async_add_executor_job(self.senertec_client.logout)
 
     def _ws_callback(self, value: canipValue):
-        _LOGGER.debug("Received senertec sensor value")
+        _LOGGER.debug("Received Sensor: %s, Value %s, Unit: %s", value.sourceDatapoint, value.dataValue, value.dataUnit)
         # append the received value to the correct device
         self.data[value.deviceSerial]["sensors"][value.sourceDatapoint] = value

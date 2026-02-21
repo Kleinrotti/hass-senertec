@@ -26,7 +26,7 @@ async def validate_connection(hass: HomeAssistant, data: dict[str, Any]):
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    _LOGGER.debug("Trying to connect to senertec during setup")
+    _LOGGER.debug("Trying to connect to Senertec Dachsportal2 during Setup")
     client = senertec()
     if not await hass.async_add_executor_job(
         client.login, data[CONF_EMAIL], data[CONF_PASSWORD]
@@ -52,7 +52,7 @@ class SenertecConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self) -> None:
-        """Initialize the Cloudflare config flow."""
+        """Initialize the Senertec config flow."""
         self.senertec_config: dict[str, Any] = {}
 
     async def async_step_reauth(
