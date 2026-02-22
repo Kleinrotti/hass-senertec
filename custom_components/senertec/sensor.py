@@ -80,7 +80,7 @@ class SenertecSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         value = self._getSensor()
-        if value.dataUnit != "":
+        if value is not None and value.dataUnit != "":
             self._unit = value.dataUnit
         return self._unit
 
