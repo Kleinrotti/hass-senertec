@@ -14,6 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.selector import SelectOptionDict
 from senertec.client import senertec
+from senertec.senertecerror import LoginServerError, InvalidCredentialsError
 
 from .const import DEVICES, DOMAIN, SELECTED_DEVICES, STEP_USER_DATA_SCHEMA
 from .OptionsFlowHandler import OptionsFlowHandler
@@ -27,11 +28,10 @@ async def validate_connection(hass: HomeAssistant, data: dict[str, Any]):
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     _LOGGER.debug("Trying to connect to Senertec Dachsportal2 during Setup")
-    client = senertec()
-    if not await hass.async_add_executor_job(
+    client = senertec(level=_LOGGER.level)
+    await hass.async_add_executor_job(
         client.login, data[CONF_EMAIL], data[CONF_PASSWORD]
-    ):
-        raise InvalidAuth
+    )
     if not await hass.async_add_executor_job(client.init):
         raise InitFailed
     devices = await hass.async_add_executor_job(client.getUnits)
@@ -81,9 +81,9 @@ class SenertecConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.senertec_config.update(
                     await validate_connection(self.hass, user_input)
                 )
-            except CannotConnect:
+            except LoginServerError:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except InvalidCredentialsError:
                 errors["base"] = "invalid_auth"
             except NoUnits:
                 errors["base"] = "no_units"
@@ -142,13 +142,6 @@ class SenertecConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create the options flow."""
         return OptionsFlowHandler()
 
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
 
 
 class NoUnits(HomeAssistantError):

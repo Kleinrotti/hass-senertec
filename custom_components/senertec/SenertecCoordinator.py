@@ -9,6 +9,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from senertec.client import canipValue, senertec
 from senertec.lang import lang
+from senertec.senertecerror import InvalidCredentialsError
 
 from .const import (
     CONF_LANG,
@@ -42,18 +43,19 @@ class SenertecCoordinator(DataUpdateCoordinator):
             ),
         )
         language = self.config_entry.options.get(CONF_LANG, DEFAULT_LANG)
-        self.senertec_client = senertec(lang[language])
+        self.senertec_client = senertec(lang[language], _LOGGER.level)
         # wait time for websocket data
         self.wait = config_entry.options.get(CONF_WAIT_INTERVAL, DEFAULT_WAIT_INTERVAL)
         self.senertec_client.messagecallback = self._ws_callback
         self.supportedItems = supportedItems
 
     def _fetch(self):
-        login = self.senertec_client.login(
-            self.config_entry.data.get(CONF_EMAIL),
-            self.config_entry.data.get(CONF_PASSWORD),
-        )
-        if not login:
+        try:
+            self.senertec_client.login(
+                self.config_entry.data.get(CONF_EMAIL),
+                self.config_entry.data.get(CONF_PASSWORD),
+            )
+        except InvalidCredentialsError:
             raise ConfigEntryAuthFailed("Credentials seem to be expired or invalid")
         init = self.senertec_client.init()
         if not init:
