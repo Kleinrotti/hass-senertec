@@ -35,12 +35,12 @@ async def validate_connection(hass: HomeAssistant, data: dict[str, Any]):
     if not await hass.async_add_executor_job(client.init):
         raise InitFailed
     devices = await hass.async_add_executor_job(client.getUnits)
-    if len(devices) == 0:
+    if not devices or len(devices) == 0:
         raise NoUnits
     await hass.async_add_executor_job(client.logout)
     return {
         DEVICES: [
-            SelectOptionDict(label=f"{dev.model} ({dev.serial})", value=dev.serial)
+            SelectOptionDict(label=f"{dev.model} (S/N: {dev.serial}, Type: {dev.productGroup})", value=dev.serial)
             for dev in devices
         ]
     }
