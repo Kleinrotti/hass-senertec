@@ -17,11 +17,11 @@ jobs:
         run: sed -i 's#"0.0.0"#"${{ env.RELEASE_VERSION }}"#' ./custom_components/senertec/manifest.json
       - name: compress files
         run: |
-          cd custom_components
-          tar -czvf senertec-${{ env.RELEASE_VERSION }}.tar.gz senertec
+          cd custom_components/senertec
+          zip -r ../senertec.zip .
       - name: Release files
         uses: softprops/action-gh-release@v2
         with:
           fail_on_unmatched_files: true
           files: |
-            custom_components/senertec-${{ env.RELEASE_VERSION }}.tar.gz
+            custom_components/senertec.zip

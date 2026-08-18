@@ -1,5 +1,7 @@
 {
     "name": "Senertec Energy System",
     "render_readme": true,
-    "homeassistant": "2024.10.0"
+    "homeassistant": "2025.10.0",
+    "zip_release": true,
+    "filename": "senertec.zip"
   }
