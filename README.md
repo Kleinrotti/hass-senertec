@@ -23,13 +23,14 @@ Custom component to support Senertec energy systems.
 ## About
 
 With this integration you can integrate the sensors of your senertec heating system into Home Assistant (read-only).
+Only Dachsportal2 ready devices!
 
 ## Installation
 
-Requires Home Assistant 2024.10.0 or newer.
+Requires Home Assistant 2025.10.0 or newer.
 You need an account for Senertec Dachsconnect Gen2.
 
-### Installation through HACS
+### Installation through HACS (recommended)
 
 If you have not yet installed HACS, go get it at https://hacs.xyz/ and walk through the installation and configuration.
 
@@ -37,11 +38,11 @@ Then find the Senertec energy system integration in HACS and install it.
 
 Restart Home Assistant!
 
-Install the new integration through *Configuration -> Integrations* in HA (see below).
+Configure the new integration through *Configuration -> Integrations* in HA (see below).
 
 ### Manual installation
 
-Copy the sub-path `/hass-senertec/custom_components/senertec` of this repo into the path
+Copy the sub-path `/custom_components/senertec` of this repo into the path
 `/config/custom_components/senertec` of your HA installation.
 
 Alternatively use the following commands within an SSH shell into your HA system.
@@ -93,20 +94,9 @@ The shipped `productGroups.json` inside the integration folder gets replaced on 
 Instead, create a new folder called `senertec` in `/config` and there create a `productGroups.override.json` file. It uses the same format as `productGroups.json`.
 
 Any product group key you define there replaces the corresponding entry from the shipped file entirely; groups you don't mention are left untouched. This file survives integration updates and reinstalls. Restart Home Assistant after changing it.
-If you don't know the product group key of you device, you get it when you setup the integration in the device selection list after login. The displayed `Type` is the group/key for the json file.
+If you don't know the product group key of your device, you get it when you setup the integration in the device selection list after login. The displayed `Type` is the group/key for the json file.
 
 ### Debugging
 
 To enable debug logging for this integration and related libraries you
-can control this in your Home Assistant `configuration.yaml`
-file. Example:
-
-```yaml
-logger:
-  default: info
-  logs:
-    custom_components.senertec: debug
-
-    py-senertec: debug
-    websocket: debug
-```
+can control this in your Home Assistant UI in the integration section.
