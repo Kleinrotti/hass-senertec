@@ -24,6 +24,7 @@ SENERTEC_POLL_SERVICE: Final = "senertec"
 # DEFAULT_NAME = "Senertec"
 SENERTEC_URL = "https://dachsconnect.senertec.com"
 PRODUCTGROUPSPATH = Path(Path(__file__).parent.resolve(), "productGroups.json")
+PRODUCTGROUPS_OVERRIDE_FILENAME = "productGroups.override.json"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {

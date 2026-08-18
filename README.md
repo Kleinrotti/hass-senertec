@@ -22,7 +22,7 @@ Custom component to support Senertec energy systems.
 
 ## About
 
-With this integration you can integrate the sensors of your senertec heating system into Home Assistant.
+With this integration you can integrate the sensors of your senertec heating system into Home Assistant (read-only).
 
 ## Installation
 
@@ -61,7 +61,7 @@ ln -s ../hass-senertec/custom_components/senertec
 
 ## Updating
 
-### Before updating please read the release changelog and backup your productGroups.json
+### Before updating please read the release changelog
 
 ## Configuration
 
@@ -84,8 +84,16 @@ The following devices are currently supported:
 - Senertec Dachs Gen2 F5.5
 - Remeha eLecta Ace 300
 
-Other devices should work too if you extend the shipped productGroups.json.
+Other devices should work too if you override the productGroups.json.
 How that file works is described [here](https://github.com/Kleinrotti/py-senertec?tab=readme-ov-file#filtering-recommended). It's located in the integration folder.
+
+### Overriding productGroups.json
+
+The shipped `productGroups.json` inside the integration folder gets replaced on every update, so don't edit it directly.
+Instead, create a new folder called `senertec` in `/config` and there create a `productGroups.override.json` file. It uses the same format as `productGroups.json`.
+
+Any product group key you define there replaces the corresponding entry from the shipped file entirely; groups you don't mention are left untouched. This file survives integration updates and reinstalls. Restart Home Assistant after changing it.
+If you don't know the product group key of you device, you get it when you setup the integration in the device selection list after login. The displayed `Type` is the group/key for the json file.
 
 ### Debugging
 
